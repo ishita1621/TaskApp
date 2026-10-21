@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Box, Paper, Typography } from "@mui/material";
-import { loadData } from "../services/taskStorage.js";
 import MuiDataGrid from "../components/MuiDataGrid"
+import AddIcon from "@mui/icons-material/Add";
+import CustomizedDialogs from "../components/MuiDialog";
+import { saveTasks, loadData } from "../services/taskStorage.js";
+import AppButton from "../components/common/AppButton.js";
 
 type Task = {
   id: number | string;
@@ -9,6 +12,8 @@ type Task = {
   status?: string;
   completed?: boolean;
 };
+
+
 
 const cardDetails = [
   { title: "Total Tasks", color: "#2563eb" },
@@ -19,6 +24,8 @@ const cardDetails = [
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [openTaskDialog, setOpenTaskDialog] = useState(false);
+const [refreshGrid, setRefreshGrid] = useState(0);
 
   useEffect(() => {
     const savedTasks = loadData();
@@ -52,59 +59,101 @@ export default function Dashboard() {
     { ...cardDetails[2], count: inProgressTasks },
     { ...cardDetails[3], count: completedTasks },
   ];
+  const handleAddTask = () => {
+    setOpenTaskDialog(true);
+  };
+
+  const handleSubmit = (task: Task) => {
+    const existingTasks = loadData();
+
+    const currentTasks: Task[] = Array.isArray(existingTasks)
+      ? existingTasks
+      : [];
+
+    const updatedTasks = [...currentTasks, task];
+
+    saveTasks(updatedTasks);
+    setTasks(updatedTasks);
+      setRefreshGrid((previous) => previous + 1);
+
+    setOpenTaskDialog(false);
+  };
 
   return (
     <>
-    <Box
-      sx={{
-        minHeight: "100vh",
-        bgcolor: "#f4f6fb",
-        p: { xs: 2, sm: 3, md: 4 },
-      }}
-    >
-      <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>
-        Task Summary
-      </Typography>
-
       <Box
         sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            sm: "repeat(2, minmax(0, 1fr))",
-            lg: "repeat(4, minmax(0, 1fr))",
-          },
-          gap: 2,
+          minHeight: "100vh",
+          bgcolor: "#f4f6fb",
+          p: { xs: 2, sm: 3, md: 4 },
         }}
       >
-        {taskStats.map((stat) => (
-          <Paper
-            key={stat.title}
-            elevation={0}
-            sx={{
-              p: 3,
-              borderRadius: 3,
-              border: "1px solid #e5e7eb",
-              borderTop: `4px solid ${stat.color}`,
-            }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              {stat.title}
-            </Typography>
+        <Typography variant="h4" fontWeight={700} sx={{ mb: 3 }}>
+          DASHBOARD
+        </Typography>
 
-            <Typography
-              variant="h4"
-              fontWeight={700}
-              sx={{ mt: 1 }}
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "repeat(2, minmax(0, 1fr))",
+              lg: "repeat(4, minmax(0, 1fr))",
+            },
+            gap: 2,
+          }}
+        >
+          {taskStats.map((stat) => (
+            <Paper
+              key={stat.title}
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                border: "1px solid #e5e7eb",
+                borderTop: `4px solid ${stat.color}`,
+              }}
             >
-              {stat.count}
-            </Typography>
-          </Paper>
-        ))}
+              <Typography variant="body2" color="text.secondary">
+                {stat.title}
+              </Typography>
+
+              <Typography
+                variant="h4"
+                fontWeight={700}
+                sx={{ mt: 1 }}
+              >
+                {stat.count}
+              </Typography>
+            </Paper>
+          ))}
+        </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            mt: 3,
+            mb: 2,
+          }}
+        >
+          <AppButton
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleAddTask}
+          >
+            Add Task
+          </AppButton>
+        </Box>
+
+        <CustomizedDialogs
+          openTaskDialog={openTaskDialog}
+          handleClose={() => setOpenTaskDialog(false)}
+          handleSubmit={handleSubmit}
+        />
+
+        <MuiDataGrid refreshTrigger={refreshGrid} />
       </Box>
-      
-      <MuiDataGrid/>
-    </Box>
-     </>
+    </>
   );
 }
