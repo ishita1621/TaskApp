@@ -79,8 +79,6 @@ export default function Taskspage() {
         onClose={() => setShowUserDetails(false)}
         onSave={handleSaveUserDetails}
       />
-
-      <TaskDataGrid />
     </TaskPageContent>
   );
 }
