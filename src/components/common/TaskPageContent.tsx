@@ -33,7 +33,7 @@ export default function TaskPageContent({
             >
                User Details
             </AppButton>
-            <h1>All Tasks</h1>
+
 
             {children}
         </>

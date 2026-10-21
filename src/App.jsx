@@ -1,12 +1,15 @@
-import React from "react";
-import Taskspage from "./pages/Taskpage.jsx";
+import { useEffect } from "react";
+import { createDemoUser, authenticateUser } from "./services/AuthStorage.js";
+import AppRoutes from "./routes/AppRoutes";
+import Taskspage from "./pages/Taskpage.js";
+
 function App() {
- 
-  return (
-    <>
-    <Taskspage />
-     </>
-  );
+  useEffect(() => {
+    createDemoUser();
+  }, []);
+
+  return <AppRoutes />
+  // return <Taskspage/>
 }
 
 export default App

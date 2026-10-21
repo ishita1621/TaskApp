@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import { DataGrid } from "@mui/x-data-grid";
 import getAllTasks from "../services/TaskApi.js";
 
-export default function TaskDataGrid() {
+export default function MuiDataGrid() {
   const [tasks, setTasks] = useState([]);
   const [load, setLoading] = useState(false);
   const [error, setError] = useState(false);
