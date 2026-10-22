@@ -1,26 +1,39 @@
 
 import { useState, useEffect } from "react";
 import Box from "@mui/material/Box";
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import getAllTasks from "../services/TaskApi.js";
-import { loadData, saveTasks } from "../services/taskStorage.js";
-import { IconButton, Tooltip } from "@mui/material";
+import {
+  DataGrid,
+  type GridColDef,
+} from "@mui/x-data-grid";
+import {
+  IconButton,
+  Tooltip,
+  Dialog,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from "@mui/material";
+import type { SelectChangeEvent } from "@mui/material/Select";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import AppButton from "./common/AppButton.js";
-import Checkbox from "@mui/material/Checkbox";
 import AppDialogTitle from "./common/AppDialogTitle.js";
-import DialogContent from "@mui/material/DialogContent";
-import DialogActions from "@mui/material/DialogActions";
-import AppTextField from "./common/AppTextField.js";
-import Dialog from "@mui/material/Dialog";
-
-type Task = {
-  id: number;
-  title: string;
-  completed: boolean;
-}
+import { loadData, saveTasks } from "../services/TaskStorage";
+import {
+  PRIORITIES,
+  STATUSES,
+  type TaskPriority,
+  type TaskStatus,
+  STATUS_FILTER_OPTIONS,
+  PRIORITY_FILTER_OPTIONS,
+} from "../constants/TaskConstant";
+import { filterTasks } from "../utils/TaskFilter";
+import type { Task } from "../types/Task.js"
+import AppSelect from "./common/AppSelect";
 
 type MuiDataGridProps = {
   refreshTrigger: number;
@@ -28,78 +41,87 @@ type MuiDataGridProps = {
 
 export default function MuiDataGrid({
   refreshTrigger,
-}:MuiDataGridProps) {
-
+}: MuiDataGridProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [load, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
   const [editOpen, setEditOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
   const [editedTitle, setEditedTitle] = useState("");
-  const [editedCompleted, setEditedCompleted] = useState(false);
+  const [editedAssignee, setEditedAssignee] = useState("");
+  const [editedPriority, setEditedPriority] =
+    useState<TaskPriority>("Medium");
+  const [editedStatus, setEditedStatus] =
+    useState<TaskStatus>("Pending");
+  const [editedDueDate, setEditedDueDate] = useState("");
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      setLoading(true);
-      setError(true);
-      try {
-        const savedTasks = loadData();
-        if (Array.isArray(savedTasks)) {
-          setTasks(savedTasks);
-        } else {
-          const data = await getAllTasks();
-          setTasks(data);
-          saveTasks(data);
-        }
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [priorityFilter, setPriorityFilter] = useState("All");
 
-    fetchTasks();
+  useEffect(() => {
+    setLoading(true);
+    setError(false);
+
+    try {
+      const savedTasks = loadData();
+
+      const localTasks = Array.isArray(savedTasks)
+        ? savedTasks
+        : [];
+
+      setTasks(localTasks);
+    } catch (error) {
+      console.error("Failed to load saved tasks:", error);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
   }, [refreshTrigger]);
 
   const handleEdit = (task: Task) => {
     setSelectedTask(task);
     setEditedTitle(task.title);
-    setEditedCompleted(task.completed);
+    setEditedAssignee(task.assignee);
+    setEditedPriority(task.priority);
+    setEditedStatus(task.status);
+    setEditedDueDate(task.dueDate ?? "");
     setEditOpen(true);
   };
 
   const handleSaveEdit = () => {
-    if (!selectedTask || !editedTitle.trim()) {
-      return;
-    }
+    if (!selectedTask || !editedTitle.trim()) return;
+
     const updatedTasks = tasks.map((task) =>
-      task.id === selectedTask.id ? {
-        ...task,
-        title: editedTitle.trim(),
-        completed: editedCompleted,
-      }
+      task.id === selectedTask.id
+        ? {
+          ...task,
+          title: editedTitle.trim(),
+          assignee: editedAssignee.trim(),
+          priority: editedPriority,
+          status: editedStatus,
+          dueDate: editedDueDate || null,
+        }
         : task
     );
+
     setTasks(updatedTasks);
     saveTasks(updatedTasks);
     setEditOpen(false);
     setSelectedTask(null);
-  }
+  };
 
-   const handleDeleteClick = (task: Task) => {
+  const handleDeleteClick = (task: Task) => {
     setTaskToDelete(task);
     setDeleteOpen(true);
   };
 
   const handleConfirmDelete = () => {
-    if (!taskToDelete) {
-      return;
-    }
+    if (!taskToDelete) return;
 
     const updatedTasks = tasks.filter(
       (task) => task.id !== taskToDelete.id
@@ -111,19 +133,44 @@ export default function MuiDataGrid({
     setTaskToDelete(null);
   };
 
-   const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", width: 90 },
-    { field: "title", headerName: "Task Title", flex: 1, minWidth: 200 },
+  const filteredTasks = filterTasks(tasks, {
+    status: statusFilter,
+    priority: priorityFilter,
+  });
+
+  const columns: GridColDef[] = [
     {
-      field: "completed",
-      headerName: "Completed",
-      width: 130,
-      type: "boolean",
+      field: "title",
+      headerName: "Task Title",
+      flex: 1.5,
+      minWidth: 180,
+    },
+    {
+      field: "assignee",
+      headerName: "Assignee",
+      flex: 1,
+      minWidth: 130,
+    },
+    {
+      field: "priority",
+      headerName: "Priority",
+      width: 120,
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      width: 150,
+    },
+    {
+      field: "dueDate",
+      headerName: "Due Date",
+      width: 140,
+      valueFormatter: (value) => value || "—",
     },
     {
       field: "actions",
       headerName: "Actions",
-      width: 120,
+      width: 110,
       sortable: false,
       filterable: false,
       renderCell: (params) => (
@@ -152,30 +199,68 @@ export default function MuiDataGrid({
     },
   ];
 
+  return (
+    <Box sx={{ width: "100%", minWidth: 0 }}>
 
- return (
-    <Box sx={{ width: "100%" }}>
-      {error && (
-        <Box sx={{ mb: 2, color: "error.main" }}>
-          Could not load tasks. Please try again.
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "flex-start",
+          gap: 2,
+          mb: 2,
+          flexWrap: "wrap",
+        }}
+      >
+        <Box sx={{ width: 270 }}>
+          <AppSelect
+            label="Filter by Status"
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            options={STATUS_FILTER_OPTIONS}
+          />
         </Box>
-      )}
 
-      <Box sx={{ height: 400, width: "100%" }}>
+        <Box sx={{ width: 270 }}>
+          <AppSelect
+            label="Filter by Priority"
+            value={priorityFilter}
+            onChange={(event) => setPriorityFilter(event.target.value)}
+            options={PRIORITY_FILTER_OPTIONS}
+          />
+        </Box>
+
+        <AppButton
+          variant="outlined"
+          onClick={() => {
+            setStatusFilter("All");
+            setPriorityFilter("All");
+          }}
+          sx={{ mt: 2 }}
+        >
+          Clear Filters
+        </AppButton>
+      </Box>
+
+
+      <Box sx={{ height: 450, width: "100%", minWidth: 0 }}>
         <DataGrid
-          rows={tasks}
+          rows={filteredTasks}
           columns={columns}
-          loading={load}
+          loading={loading}
           pageSizeOptions={[5, 10, 20]}
           initialState={{
             pagination: {
-              paginationModel: { pageSize: 5, page: 0 },
+              paginationModel: {
+                pageSize: 5,
+                page: 0,
+              },
             },
           }}
+          disableRowSelectionOnClick
         />
       </Box>
 
-      {/* Edit task dialog */}
+      {/* Edit Task Dialog */}
       <Dialog
         open={editOpen}
         onClose={() => setEditOpen(false)}
@@ -185,8 +270,7 @@ export default function MuiDataGrid({
         <AppDialogTitle>Edit Task</AppDialogTitle>
 
         <DialogContent>
-          <AppTextField
-            autoFocus
+          <TextField
             fullWidth
             margin="normal"
             label="Task Title"
@@ -198,16 +282,60 @@ export default function MuiDataGrid({
             }
           />
 
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={editedCompleted}
-                onChange={(event) =>
-                  setEditedCompleted(event.target.checked)
-                }
-              />
-            }
-            label="Completed"
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Assignee"
+            value={editedAssignee}
+            onChange={(event) => setEditedAssignee(event.target.value)}
+          />
+
+          <FormControl fullWidth margin="normal" size="small">
+            <InputLabel id="edit-priority-label">Priority</InputLabel>
+            <Select
+              labelId="edit-priority-label"
+              label="Priority"
+              value={editedPriority}
+              onChange={(event: SelectChangeEvent) =>
+                setEditedPriority(event.target.value as TaskPriority)
+              }
+            >
+              {PRIORITIES.map((priority) => (
+                <MenuItem key={priority} value={priority}>
+                  {priority}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl fullWidth margin="normal" size="small">
+            <InputLabel id="edit-status-label">Status</InputLabel>
+            <Select
+              labelId="edit-status-label"
+              label="Status"
+              value={editedStatus}
+              onChange={(event: SelectChangeEvent) =>
+                setEditedStatus(event.target.value as TaskStatus)
+              }
+            >
+              {STATUSES.map((status) => (
+                <MenuItem key={status} value={status}>
+                  {status}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Due Date"
+            type="date"
+            value={editedDueDate}
+            onChange={(event) => setEditedDueDate(event.target.value)}
+            slotProps={{
+              inputLabel: { shrink: true },
+            }}
           />
         </DialogContent>
 
@@ -226,7 +354,7 @@ export default function MuiDataGrid({
         </DialogActions>
       </Dialog>
 
-      {/* Delete confirmation dialog */}
+      {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}

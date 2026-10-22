@@ -18,7 +18,7 @@ export default function Taskspage() {
   const [openTaskDialog, setOpenTaskDialog] = useState(false);
   const [showUserDetails, setShowUserDetails] = useState(false);
 
-   const handleUserDetails = (): void => {
+  const handleUserDetails = (): void => {
     setShowUserDetails(true);
   };
 
@@ -69,11 +69,11 @@ export default function Taskspage() {
       onFilter={handleFilter}
       onUserDetails={handleUserDetails}
     >
-      <CustomizedDialogs
+      {/* <CustomizedDialogs
         openTaskDialog={openTaskDialog}
         handleClose={() => setOpenTaskDialog(false)}
         handleSubmit={handleSubmit}
-      />
+      /> */}
       <UserDetailsDialog
         open={showUserDetails}
         onClose={() => setShowUserDetails(false)}
