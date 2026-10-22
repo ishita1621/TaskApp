@@ -6,6 +6,9 @@ import Typography from "@mui/material/Typography";
 import AppBox from "../components/common/AppBox"
 import { authenticateUser } from "../services/AuthStorage";
 import { useNavigate } from "react-router-dom";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
+import { useState } from "react";
 
 const loginSchema = Yup.object({
     email: Yup.string()
@@ -28,6 +31,7 @@ type LoginFormValues = {
 };
 
 export default function Login() {
+    const [successOpen, setSuccessOpen] = useState(false);
     const navigate = useNavigate();
     const formik = useFormik<LoginFormValues>({
         initialValues: {
@@ -49,10 +53,12 @@ export default function Login() {
             setStatus(undefined);
             localStorage.setItem("isAuthenticated", "true");
             resetForm();
-            navigate("/dashboard");
+            setSuccessOpen(true);
             setSubmitting(false);
 
-
+            setTimeout(() => {
+                navigate("/dashboard");
+            }, 1500);
         },
     });
 
@@ -79,9 +85,7 @@ export default function Login() {
             >
                 <Typography
                     variant="h4"
-                    fontWeight={700}
-                    textAlign="center"
-                    sx={{ mb: 1 }}
+                    sx={{ mb: 1, textAlign:"center",fontWeight:700 }}
                 >
                     Log In
                 </Typography>
@@ -89,8 +93,7 @@ export default function Login() {
                 <Typography
                     variant="body2"
                     color="text.secondary"
-                    textAlign="center"
-                    sx={{ mb: 2 }}
+                    sx={{ mb: 2 , textAlign:"center"}}
                 >
                     Welcome back! Please enter your details.
                 </Typography>
@@ -141,6 +144,21 @@ export default function Login() {
                     </AppBox>
                 </form>
             </AppBox>
+            <Snackbar
+                open={successOpen}
+                autoHideDuration={1500}
+                anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                onClose={() => setSuccessOpen(false)}
+            >
+                <Alert
+                    severity="success"
+                    variant="filled"
+                    onClose={() => setSuccessOpen(false)}
+                    sx={{ width: "100%" }}
+                >
+                    Login successful! Welcome back.
+                </Alert>
+            </Snackbar>
         </AppBox>
     );
 }

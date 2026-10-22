@@ -7,5 +7,5 @@ export default function ProtectedRoute(){
         return <Navigate to="/login" replace />;
 
     }
-    return <Outlet />;
+    return <Outlet />; //RETURN TO NESTED ROUTE INSIDE THE PROTECTED ROUTE
 }

@@ -1,7 +1,7 @@
 export type DemoUser={
     id:number;
     email:string;
-    password:String;
+    password:string;
 };
 
 const USER_KEY="demoUser";

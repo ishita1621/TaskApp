@@ -3,16 +3,13 @@ import { Box, Paper, Typography } from "@mui/material";
 import MuiDataGrid from "../components/MuiDataGrid"
 import AddIcon from "@mui/icons-material/Add";
 import CustomizedDialogs from "../components/MuiDialog";
-import { saveTasks, loadData } from "../services/taskStorage.js";
+import { saveTasks, loadData } from "../services/TaskStorage";
 import AppButton from "../components/common/AppButton.js";
-
-type Task = {
-  id: number | string;
-  title: string;
-  status?: string;
-  completed?: boolean;
-};
-
+import { useNavigate } from "react-router-dom";
+import LogoutIcon from "@mui/icons-material/Logout";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
+import type { Task } from "../types/Task";
 
 
 const cardDetails = [
@@ -25,31 +22,37 @@ const cardDetails = [
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [openTaskDialog, setOpenTaskDialog] = useState(false);
-const [refreshGrid, setRefreshGrid] = useState(0);
+  const [refreshGrid, setRefreshGrid] = useState(0);
+  const [successOpen, setSuccessOpen] = useState(false);
+
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("isAuthenticated");
+    navigate("/login", { replace: true });
+  };
 
   useEffect(() => {
     const savedTasks = loadData();
-    setTasks(savedTasks);
+    setTasks(Array.isArray(savedTasks) ? savedTasks : []);
   }, []);
 
   const totalTasks = tasks.length;
 
   const completedTasks = tasks.filter(
     (task) =>
-      task.status?.toLowerCase() === "completed" ||
-      task.completed === true
+      task.status?.toLowerCase() === "completed"
   ).length;
 
   const inProgressTasks = tasks.filter(
-    (task) => task.status?.toLowerCase() === "in-progress"
+    (task) => task.status?.toLowerCase() === "in progress"
   ).length;
 
   const pendingTasks = tasks.filter((task) => {
     const status = task.status?.toLowerCase();
 
     return (
-      status === "pending" ||
-      (!status && task.completed !== true)
+      status === "pending"
     );
   }).length;
 
@@ -74,9 +77,10 @@ const [refreshGrid, setRefreshGrid] = useState(0);
 
     saveTasks(updatedTasks);
     setTasks(updatedTasks);
-      setRefreshGrid((previous) => previous + 1);
+    setRefreshGrid((previous) => previous + 1);
 
     setOpenTaskDialog(false);
+    setSuccessOpen(true);
   };
 
   return (
@@ -88,9 +92,28 @@ const [refreshGrid, setRefreshGrid] = useState(0);
           p: { xs: 2, sm: 3, md: 4 },
         }}
       >
-        <Typography variant="h4" fontWeight={700} sx={{ mb: 3 }}>
-          DASHBOARD
-        </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            width: "100%",
+            mb: 3,
+          }}
+        >
+          <Typography variant="h4" sx={{FontWeight:700}}>
+            DASHBOARD
+          </Typography>
+
+          <AppButton
+            variant="outlined"
+            color="error"
+            startIcon={<LogoutIcon />}
+            onClick={handleLogout}
+          >
+            Logout
+          </AppButton>
+        </Box>
 
         <Box
           sx={{
@@ -120,8 +143,7 @@ const [refreshGrid, setRefreshGrid] = useState(0);
 
               <Typography
                 variant="h4"
-                fontWeight={700}
-                sx={{ mt: 1 }}
+                sx={{ mt: 1,fontWeight:700 }}
               >
                 {stat.count}
               </Typography>
@@ -153,6 +175,21 @@ const [refreshGrid, setRefreshGrid] = useState(0);
         />
 
         <MuiDataGrid refreshTrigger={refreshGrid} />
+        <Snackbar
+          open={successOpen}
+          autoHideDuration={3000}
+          onClose={() => setSuccessOpen(false)}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <Alert
+            onClose={() => setSuccessOpen(false)}
+            severity="success"
+            variant="filled"
+            sx={{ width: "100%" }}
+          >
+            Task added successfully!
+          </Alert>
+        </Snackbar>
       </Box>
     </>
   );
