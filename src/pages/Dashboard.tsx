@@ -56,6 +56,10 @@ export default function Dashboard() {
     );
   }).length;
 
+  const handleTasksChange = (updatedTasks: Task[]) => {
+    setTasks(updatedTasks);
+  };
+
   const taskStats = [
     { ...cardDetails[0], count: totalTasks },
     { ...cardDetails[1], count: pendingTasks },
@@ -101,7 +105,7 @@ export default function Dashboard() {
             mb: 3,
           }}
         >
-          <Typography variant="h4" sx={{FontWeight:700}}>
+          <Typography variant="h4" sx={{ FontWeight: 700 }}>
             DASHBOARD
           </Typography>
 
@@ -143,7 +147,7 @@ export default function Dashboard() {
 
               <Typography
                 variant="h4"
-                sx={{ mt: 1,fontWeight:700 }}
+                sx={{ mt: 1, fontWeight: 700 }}
               >
                 {stat.count}
               </Typography>
@@ -174,7 +178,9 @@ export default function Dashboard() {
           handleSubmit={handleSubmit}
         />
 
-        <MuiDataGrid refreshTrigger={refreshGrid} />
+        <MuiDataGrid refreshTrigger={refreshGrid}
+          onTasksChange={handleTasksChange}
+        />
         <Snackbar
           open={successOpen}
           autoHideDuration={3000}

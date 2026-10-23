@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Box from "@mui/material/Box";
 import {
   DataGrid,
@@ -34,13 +34,16 @@ import {
 import { filterTasks } from "../utils/TaskFilter";
 import type { Task } from "../types/Task.js"
 import AppSelect from "./common/AppSelect";
+import AppTextField from "./common/AppTextField.js";
 
 type MuiDataGridProps = {
   refreshTrigger: number;
+  onTasksChange: (updatedTasks: Task[]) => void;
 };
 
 export default function MuiDataGrid({
   refreshTrigger,
+  onTasksChange,
 }: MuiDataGridProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
@@ -62,6 +65,8 @@ export default function MuiDataGrid({
 
   const [statusFilter, setStatusFilter] = useState("All");
   const [priorityFilter, setPriorityFilter] = useState("All");
+
+  const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -111,6 +116,8 @@ export default function MuiDataGrid({
 
     setTasks(updatedTasks);
     saveTasks(updatedTasks);
+    onTasksChange(updatedTasks);
+
     setEditOpen(false);
     setSelectedTask(null);
   };
@@ -129,14 +136,18 @@ export default function MuiDataGrid({
 
     setTasks(updatedTasks);
     saveTasks(updatedTasks);
+    onTasksChange(updatedTasks);
     setDeleteOpen(false);
     setTaskToDelete(null);
   };
 
-  const filteredTasks = filterTasks(tasks, {
-    status: statusFilter,
-    priority: priorityFilter,
-  });
+  const filteredTask = useMemo(() => {
+    return filterTasks(tasks, {
+      search: searchText,
+      status: statusFilter,
+      priority: priorityFilter,
+    });
+  }, [tasks, searchText, statusFilter, priorityFilter]);
 
   const columns: GridColDef[] = [
     {
@@ -205,13 +216,14 @@ export default function MuiDataGrid({
       <Box
         sx={{
           display: "flex",
+          flexDirection: "row",
           alignItems: "flex-start",
           gap: 2,
           mb: 2,
-          flexWrap: "wrap",
+          flexWrap: "nowrap",
         }}
       >
-        <Box sx={{ width: 270 }}>
+        <Box sx={{ width: 270, flexShrink: 0 }}>
           <AppSelect
             label="Filter by Status"
             value={statusFilter}
@@ -220,7 +232,7 @@ export default function MuiDataGrid({
           />
         </Box>
 
-        <Box sx={{ width: 270 }}>
+        <Box sx={{ width: 270, flexShrink: 0 }}>
           <AppSelect
             label="Filter by Priority"
             value={priorityFilter}
@@ -235,16 +247,44 @@ export default function MuiDataGrid({
             setStatusFilter("All");
             setPriorityFilter("All");
           }}
-          sx={{ mt: 2 }}
+          sx={{
+            mt: "16px",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+            height: 40,
+            m: 0,
+          }}
         >
           Clear Filters
         </AppButton>
       </Box>
-
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+          mb: 2,
+        }}
+      >
+        <AppTextField
+          label="Search tasks"
+          placeholder="Search by task title"
+          fullWidth={false}
+          value={searchText}
+          onChange={(event) => setSearchText(event.target.value)}
+        />
+        <AppButton
+          variant="outlined"
+          onClick={() => setSearchText("")}
+          sx={{ md: 4 }}
+        >
+          Clear Search
+        </AppButton>
+      </Box>
 
       <Box sx={{ height: 450, width: "100%", minWidth: 0 }}>
         <DataGrid
-          rows={filteredTasks}
+          rows={filteredTask}
           columns={columns}
           loading={loading}
           pageSizeOptions={[5, 10, 20]}

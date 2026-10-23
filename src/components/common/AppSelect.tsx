@@ -31,9 +31,12 @@ export default function AppSelect({
   return (
     <FormControl
       fullWidth
-      margin="normal"
+      margin="none"
       size="small"
       error={error}
+      sx={{
+        mb:2,
+      }}
     >
       <InputLabel id={labelId}>{label}</InputLabel>
 
@@ -42,6 +45,7 @@ export default function AppSelect({
         value={value}
         label={label}
         onChange={onChange}
+
       >
         {options.map((item) => (
           <MenuItem key={item.value} value={item.value}>

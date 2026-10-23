@@ -15,7 +15,6 @@ export default function AppTextField({
       onChange={onChange}
       fullWidth
       size="small"
-      sx={{ mb: 2 }}
       {...props}
     />
   );

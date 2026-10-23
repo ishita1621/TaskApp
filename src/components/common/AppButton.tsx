@@ -16,7 +16,7 @@ export default function AppButton({
     <Button
       variant={variant}
       color={color}
-      sx={{ m: 1, ...sx }}
+      sx={{...sx }}
       {...props}
     >
       {children}
