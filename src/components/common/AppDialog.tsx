@@ -13,6 +13,7 @@ import AppSelect from "./AppSelect";
 import AppDatePicker from "./AppDatePicker";
 import AppButton from "./AppButton";
 import BootstrapDialog from "./BootstrapDialog";
+import Stack from "@mui/material/Stack";
 
 import {
   PRIORITIES,
@@ -88,76 +89,80 @@ export default function AppDialog({
 
       <AppCloseButton onClick={handleClose} />
 
-      <DialogContent dividers>
-        <AppTextField
-          label="Task Title"
-          name="title"
-          value={title}
-          onChange={handleTitleChange}
-          onBlur={handleBlur}
-          error={Boolean(touched.title && errors.title)}
-          helperText={touched.title ? errors.title : ""}
-        />
 
-        <AppTextField
-          label="Description"
-          name="description"
-          value={description}
-          onChange={handleDescriptionChange}
-          onBlur={handleBlur}
-          multiline
-          rows={3}
-          error={Boolean(touched.description && errors.description)}
-          helperText={touched.description ? errors.description : ""}
-        />
+<DialogContent dividers>
+  <Stack spacing={2}>
+    <AppTextField
+      label="Task Title"
+      name="title"
+      value={title}
+      onChange={handleTitleChange}
+      onBlur={handleBlur}
+      error={Boolean(touched.title && errors.title)}
+      helperText={touched.title ? errors.title : ""}
+    />
 
-        <AppTextField
-          label="Assignee"
-          name="assignee"
-          value={assignee}
-          onChange={handleAssigneeChange}
-          onBlur={handleBlur}
-          error={Boolean(touched.assignee && errors.assignee)}
-          helperText={touched.assignee ? errors.assignee : ""}
-        />
+    <AppTextField
+      label="Description"
+      name="description"
+      value={description}
+      onChange={handleDescriptionChange}
+      onBlur={handleBlur}
+      multiline
+      rows={3}
+      error={Boolean(touched.description && errors.description)}
+      helperText={touched.description ? errors.description : ""}
+    />
 
-        <AppSelect
-          label="Priority"
-          value={priority}
-          onChange={handlePriorityChange}
-          options={PRIORITIES.map((item) => ({
-            label: item,
-            value: item,
-          }))}
-          error={Boolean(touched.priority && errors.priority)}
-          helperText={touched.priority ? errors.priority : ""}
-        />
+    <AppTextField
+      label="Assignee"
+      name="assignee"
+      value={assignee}
+      onChange={handleAssigneeChange}
+      onBlur={handleBlur}
+      error={Boolean(touched.assignee && errors.assignee)}
+      helperText={touched.assignee ? errors.assignee : ""}
+    />
 
-        <AppSelect
-          label="Status"
-          value={status}
-          onChange={handleStatusChange}
-          options={STATUSES.map((item) => ({
-            label: item,
-            value: item,
-          }))}
-          error={Boolean(touched.status && errors.status)}
-          helperText={touched.status ? errors.status : ""}
-        />
+    <AppSelect
+      label="Priority"
+      value={priority}
+      onChange={handlePriorityChange}
+      options={PRIORITIES.map((item) => ({
+        label: item,
+        value: item,
+      }))}
+      error={Boolean(touched.priority && errors.priority)}
+      helperText={touched.priority ? errors.priority : ""}
+    />
 
-        <AppDatePicker
-          label="Due Date"
-          value={dueDate}
-          onChange={handleDueDateChange}
-          onBlur={() =>
-            handleBlur({
-              target: { name: "dueDate" },
-            } as React.FocusEvent<HTMLInputElement>)
-          }
-          error={Boolean(touched.dueDate && errors.dueDate)}
-          helperText={touched.dueDate ? errors.dueDate : ""}
-        />
-      </DialogContent>
+    <AppSelect
+      label="Status"
+      value={status}
+      onChange={handleStatusChange}
+      options={STATUSES.map((item) => ({
+        label: item,
+        value: item,
+      }))}
+      error={Boolean(touched.status && errors.status)}
+      helperText={touched.status ? errors.status : ""}
+    />
+
+    <AppDatePicker
+      label="Due Date"
+      value={dueDate}
+      onChange={handleDueDateChange}
+      onBlur={() =>
+        handleBlur({
+          target: { name: "dueDate" },
+        } as React.FocusEvent<HTMLInputElement>)
+      }
+      error={Boolean(touched.dueDate && errors.dueDate)}
+      helperText={touched.dueDate ? errors.dueDate : ""}
+    />
+  </Stack>
+</DialogContent>
+
 
       <DialogActions>
         <AppButton onClick={handleClose} color="inherit">

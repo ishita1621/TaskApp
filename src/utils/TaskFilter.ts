@@ -14,6 +14,7 @@ type Task = {
 };
 
 type TaskFilters = {
+  search:string;
   status: string;
   priority: string;
 };
@@ -23,6 +24,11 @@ export const filterTasks = (
   filters: TaskFilters
 ): Task[] => {
   return tasks.filter((task) => {
+
+    const matchesSearch=task.title  
+      .toLowerCase()
+      .includes(filters.search.toLowerCase());
+
     const matchesStatus =
       filters.status === "All" ||
       task.status === filters.status;
@@ -31,6 +37,6 @@ export const filterTasks = (
       filters.priority === "All" ||
       task.priority === filters.priority;
 
-    return matchesStatus && matchesPriority;
+    return matchesSearch && matchesStatus && matchesPriority;
   });
 };
